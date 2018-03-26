@@ -19,8 +19,12 @@ class RoutingConfiguration {
                 handler.getPortfolio(it)
             }
 
-            POST("/portfolio"){
+            POST("/portfolio/new"){
                 handler.createPortfolio(it)
+            }
+
+            PATCH("/portfolio/{$namePathVariable}/positions"){
+                handler.updatePositions(it)
             }
         }
     }
