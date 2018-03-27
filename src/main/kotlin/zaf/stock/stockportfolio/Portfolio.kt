@@ -1,19 +1,20 @@
 package zaf.stock.stockportfolio
 
 import java.util.*
-import javax.persistence.Entity
-import javax.persistence.Id
+import javax.persistence.*
 
 @Entity
 class Portfolio(
-        @Id val id: String ?= null
+        @Id @GeneratedValue var id: Long = 0
         , val name: String
         , val creation: Date = Date()
-        , val positions: MutableList<StockPosition> = mutableListOf()
+        , @OneToMany(cascade = arrayOf(CascadeType.ALL)) val positions: MutableList<StockPosition> = mutableListOf()
 )
 
+@Entity
 class StockPosition(
-        val isin: String,
-        val volume: Number,
-        val buyPrice: Number
+        @Id @GeneratedValue var id: Long = 0
+        , val isin: String
+        , val volume: Number
+        , val buyPrice: Number
 )
