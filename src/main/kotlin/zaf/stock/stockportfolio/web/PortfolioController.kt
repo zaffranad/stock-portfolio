@@ -6,6 +6,7 @@ import zaf.stock.stockportfolio.service.PortfolioService
 import zaf.stock.stockportfolio.model.Portfolio
 import zaf.stock.stockportfolio.model.StockPortfolio
 import zaf.stock.stockportfolio.web.exception.PortfolioCreationException
+import zaf.stock.stockportfolio.web.exception.PortfolioStockAddException
 import zaf.stock.stockportfolio.web.exception.ResourceNotFoundException
 
 @RestController
@@ -42,10 +43,10 @@ class PortfolioController(val portfolioService: PortfolioService) {
     }
 
     @GetMapping("/")
-    fun listPortfolios() {
+    fun listPortfolios() : List<Portfolio> {
         log.debug("getting all portfolios")
 
-        portfolioService.getAll()
+        return portfolioService.getAll()
     }
 
     @PutMapping("/portfolio/{portfolioName}")
@@ -63,6 +64,10 @@ class PortfolioController(val portfolioService: PortfolioService) {
             it.stocks.add(
                     StockPortfolio(isin = isin, volume = volume, buyPrice = price)
             )
+
+            return@ifPresent
         }
+
+        throw PortfolioStockAddException()
     }
 }
