@@ -1,4 +1,4 @@
-package zaf.stock.stockportfolio
+package zaf.stock.stockportfolio.config
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication

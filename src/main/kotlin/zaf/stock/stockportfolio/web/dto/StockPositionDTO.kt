@@ -1,4 +1,4 @@
-package zaf.stock.stockportfolio
+package zaf.stock.stockportfolio.web.dto
 
 class StockPositionDTO (val isin: String,
                         val volume: Number,

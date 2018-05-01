@@ -1,18 +1,16 @@
-package zaf.stock.stockportfolio
+package zaf.stock.stockportfolio.service
 
 import org.slf4j.LoggerFactory
 import org.springframework.dao.DataAccessException
 import org.springframework.stereotype.Component
+import zaf.stock.stockportfolio.data.PortfolioRepository
+import zaf.stock.stockportfolio.model.Portfolio
 import java.util.*
 
 @Component
-class PortfolioHandler(val portfolioRepository: PortfolioRepository) {
+class PortfolioService(val portfolioRepository: PortfolioRepository) {
 
-    val log = LoggerFactory.getLogger(PortfolioHandler::class.java.name)
-
-    companion object {
-        val namePathVariable = "portfolioName"
-    }
+    val log = LoggerFactory.getLogger(PortfolioService::class.java.name)!!
 
     /**
      * Retrieve the portfolio with name $name
@@ -44,8 +42,12 @@ class PortfolioHandler(val portfolioRepository: PortfolioRepository) {
         }
     }
 
-/**
-     * Fully replace positions on portfolio
+    fun getAll() : List<Portfolio>{
+        return portfolioRepository.findAll()
+    }
+
+    /**
+     * Fully replace stocks on portfolio
      *//*
 
     fun updatePositions(request: ServerRequest): Mono<ServerResponse> {
@@ -54,20 +56,20 @@ class PortfolioHandler(val portfolioRepository: PortfolioRepository) {
         return try {
 //            val portfolio = portfolioRepository.findByName(portfolioName)
             val portfolio = Portfolio(name = "test")
-            portfolio.positions.clear()
+            portfolio.stocks.clear()
 
-            val positions = getPositions(request)
-            portfolio.positions.addAll(positions)
+            val stocks = getStocks(request)
+            portfolio.stocks.addAll(stocks)
 
             portfolioRepository.save(portfolio)
             toServerResponse(portfolio)
         } catch (e: Exception) {
-            log.debug("error while update positions for portfolio $portfolioName - $e")
+            log.debug("error while update stocks for portfolio $portfolioName - $e")
             ServerResponse.status(INTERNAL_SERVER_ERROR).build()
         }
     }
 
-    private fun getPositions(request: ServerRequest): List<StockPosition> {
+    private fun getStocks(request: ServerRequest): List<StockPosition> {
         val flux= request.bodyToFlux<StockPositionDTO>()
 
         val list = flux.map { t -> StockPosition(isin = t.isin, volume = t.volume, buyPrice = t.buyPrice) }
