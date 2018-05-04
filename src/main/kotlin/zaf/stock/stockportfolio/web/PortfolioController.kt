@@ -2,23 +2,32 @@ package zaf.stock.stockportfolio.web
 
 import org.slf4j.LoggerFactory
 import org.springframework.web.bind.annotation.*
-import zaf.stock.stockportfolio.service.PortfolioService
-import zaf.stock.stockportfolio.model.Portfolio
-import zaf.stock.stockportfolio.model.StockPortfolio
+import zaf.stock.stockportfolio.portfolio.exception.PortfolioOperationException
+import zaf.stock.stockportfolio.portfolio.model.Portfolio
+import zaf.stock.stockportfolio.portfolio.model.Position
+import zaf.stock.stockportfolio.portfolio.usecase.AddPositionOnPortfolio
+import zaf.stock.stockportfolio.portfolio.usecase.CreatePortfolio
+import zaf.stock.stockportfolio.portfolio.usecase.GetAllPortfolios
+import zaf.stock.stockportfolio.portfolio.usecase.GetSinglePortfolio
 import zaf.stock.stockportfolio.web.exception.PortfolioCreationException
 import zaf.stock.stockportfolio.web.exception.PortfolioStockAddException
 import zaf.stock.stockportfolio.web.exception.ResourceNotFoundException
 
 @RestController
 @RequestMapping("/portfolios")
-class PortfolioController(val portfolioService: PortfolioService) {
+class PortfolioController(
+        val createPortfolio: CreatePortfolio
+        , val getSinglePortfolio: GetSinglePortfolio
+        , val getAllPortfolios: GetAllPortfolios
+        , val addPositionOnPortfolio: AddPositionOnPortfolio
+) {
 
     val log = LoggerFactory.getLogger(PortfolioController::class.java.name)!!
 
     @GetMapping("/portfolio/{portfolioName}")
     fun getPorftolio(@PathVariable portfolioName: String): Portfolio {
         log.debug("getting portfolio with name $portfolioName")
-        val portfolio = portfolioService.getPortfolio(portfolioName)
+        val portfolio = getSinglePortfolio.get(portfolioName)
 
         portfolio.ifPresent {
             log.debug("portfolio found: $portfolio")
@@ -32,7 +41,7 @@ class PortfolioController(val portfolioService: PortfolioService) {
     fun newPortfolio(@RequestParam portfolioName: String): Portfolio {
         log.debug("create portfolio with name $portfolioName")
 
-        val createdPortfolio = portfolioService.createPortfolio(portfolioName)
+        val createdPortfolio = createPortfolio.create(portfolioName)
 
         createdPortfolio.ifPresent {
             log.debug("portfolio created: $createdPortfolio")
@@ -43,31 +52,27 @@ class PortfolioController(val portfolioService: PortfolioService) {
     }
 
     @GetMapping("/")
-    fun listPortfolios() : List<Portfolio> {
+    fun listPortfolios(): List<Portfolio> {
         log.debug("getting all portfolios")
-
-        return portfolioService.getAll()
+        return getAllPortfolios.get()
     }
 
-    @PutMapping("/portfolio/{portfolioName}")
-    fun addStock(@PathVariable portfolioName: String,
-                 @RequestParam isin: String,
-                 @RequestParam volume: Int,
-                 @RequestParam price: Float): Portfolio {
+    @PutMapping("/portfolio/{portfolioName}/positions/add")
+    fun addPosition(@PathVariable portfolioName: String,
+                    @RequestParam isin: String,
+                    @RequestParam volume: Int,
+                    @RequestParam price: Float): Portfolio {
 
-        log.debug("add stock $isin (vol: $volume - price: $price")
-        val portfolio = portfolioService.getPortfolio(portfolioName)
+        log.debug("add position $isin (vol: $volume - price: $price")
 
-        portfolio.ifPresent {
-            log.debug("portfolio found: $portfolio")
-
-            it.stocks.add(
-                    StockPortfolio(isin = isin, volume = volume, buyPrice = price)
+        try {
+            return addPositionOnPortfolio.add(
+                    Position(isin = isin, volume = volume, buyPrice = price),
+                    portfolioName
             )
-
-            return@ifPresent
+        }catch (operationExceptionOperationException: PortfolioOperationException){
+            throw PortfolioStockAddException()
         }
 
-        throw PortfolioStockAddException()
     }
 }
