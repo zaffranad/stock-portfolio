@@ -3,6 +3,7 @@ package zaf.stock.stockportfolio.web
 import org.slf4j.LoggerFactory
 import org.springframework.web.bind.annotation.*
 import zaf.stock.stockportfolio.portfolio.exception.PortfolioOperationException
+import zaf.stock.stockportfolio.web.exception.PortfolioRetrievingException
 import zaf.stock.stockportfolio.portfolio.model.Portfolio
 import zaf.stock.stockportfolio.portfolio.model.Position
 import zaf.stock.stockportfolio.portfolio.usecase.AddPositionOnPortfolio
@@ -43,18 +44,20 @@ class PortfolioController(
 
         val createdPortfolio = createPortfolio.create(portfolioName)
 
-        createdPortfolio.ifPresent {
-            log.debug("portfolio created: $createdPortfolio")
-            return@ifPresent
-        }
+        val portfolio = createdPortfolio.orElseThrow({ PortfolioCreationException() })
+        log.debug("portfolio created: $createdPortfolio")
 
-        throw PortfolioCreationException()
+        return portfolio
     }
 
     @GetMapping("/")
     fun listPortfolios(): List<Portfolio> {
         log.debug("getting all portfolios")
-        return getAllPortfolios.get()
+        try {
+            return getAllPortfolios.get()
+        } catch (e: PortfolioOperationException) {
+            throw PortfolioRetrievingException("Exception while retrieving all portfolios")
+        }
     }
 
     @PutMapping("/portfolio/{portfolioName}/positions/add")

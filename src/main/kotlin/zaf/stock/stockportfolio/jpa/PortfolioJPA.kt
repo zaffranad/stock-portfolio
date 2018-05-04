@@ -5,6 +5,7 @@ import org.springframework.dao.DataAccessException
 import org.springframework.stereotype.Component
 import zaf.stock.stockportfolio.jpa.adapter.DataEntityAdapter
 import zaf.stock.stockportfolio.portfolio.data.PortfolioData
+import zaf.stock.stockportfolio.portfolio.exception.PortfolioOperationException
 import zaf.stock.stockportfolio.portfolio.model.Portfolio
 import java.util.*
 
@@ -35,7 +36,7 @@ class PortfolioJPA(
             dataEntityAdapter.toPortfolios(portfolios)
         } catch (e: DataAccessException) {
             log.error("error while retrieving all portfolios", e)
-            emptyList()
+            throw PortfolioOperationException()
         }
     }
 
@@ -44,7 +45,11 @@ class PortfolioJPA(
 
         return try {
             val toPortfolioEntity = dataEntityAdapter.toPortfolioEntity(portfolio)
+            log.debug("saving the entity $toPortfolioEntity")
+
             val portfolioEntity = portfolioRepository.save(toPortfolioEntity)
+            log.debug("saved entity: $portfolioEntity")
+
             val portfolioSaved = dataEntityAdapter.toPortfolio(portfolioEntity)
             Optional.of(portfolioSaved)
         } catch (e: DataAccessException) {
