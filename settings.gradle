@@ -1,6 +1,0 @@
-rootProject.name = 'stock-portfolio'
-
-include 'stock-portfolio-core'
-include 'stock-portfolio-jpa'
-include 'stock-portfolio-app'
-

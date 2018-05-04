@@ -1,6 +1,6 @@
 buildscript {
     ext {
-        kotlinVersion = '1.2.31'
+        kotlinVersion = '1.2.41'
         springBootVersion = '2.0.0.RELEASE'
     }
     repositories {
@@ -23,6 +23,11 @@ group = 'zaf.stock'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = 1.8
 
+repositories {
+    mavenCentral()
+    maven { url "https://repo.spring.io/milestone" }
+}
+
 compileKotlin {
     kotlinOptions {
         freeCompilerArgs = ["-Xjsr305=strict"]
@@ -36,16 +41,9 @@ compileTestKotlin {
     }
 }
 
-allprojects {
-    repositories {
-        mavenCentral()
-        maven { url "https://repo.spring.io/milestone" }
-    }
-
-    tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
-        kotlinOptions {
-            jvmTarget = "1.8"
-        }
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).all {
+    kotlinOptions {
+        jvmTarget = "1.8"
     }
 }
 
@@ -61,4 +59,18 @@ dependencyManagement {
 
 bootJar {
     mainClassName = 'zaf.stock.stockportfolio.StockPortfolioApplication'
+}
+
+dependencies {
+    compile('org.springframework.boot:spring-boot-starter-data-jpa')
+    compile('org.springframework.boot:spring-boot-starter-web')
+    compile('com.h2database:h2')
+    compile('javax.xml.bind:jaxb-api:2.3.0')
+    compile('com.fasterxml.jackson.module:jackson-module-kotlin')
+    compile("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    compile("org.jetbrains.kotlin:kotlin-reflect")
+
+    runtime('org.springframework.boot:spring-boot-devtools')
+    testCompile('org.springframework.boot:spring-boot-starter-test')
+    testCompile('io.projectreactor:reactor-test')
 }
