@@ -3,24 +3,18 @@ package zaf.stock.stockportfolio.web
 import org.slf4j.LoggerFactory
 import org.springframework.web.bind.annotation.*
 import zaf.stock.stockportfolio.portfolio.exception.PortfolioOperationException
-import zaf.stock.stockportfolio.web.exception.PortfolioRetrievingException
+import zaf.stock.stockportfolio.portfolio.facade.PortfolioFacade
 import zaf.stock.stockportfolio.portfolio.model.Portfolio
 import zaf.stock.stockportfolio.portfolio.model.Position
-import zaf.stock.stockportfolio.portfolio.usecase.AddPositionOnPortfolio
-import zaf.stock.stockportfolio.portfolio.usecase.CreatePortfolio
-import zaf.stock.stockportfolio.portfolio.usecase.GetAllPortfolios
-import zaf.stock.stockportfolio.portfolio.usecase.GetSinglePortfolio
 import zaf.stock.stockportfolio.web.exception.PortfolioCreationException
+import zaf.stock.stockportfolio.web.exception.PortfolioRetrievingException
 import zaf.stock.stockportfolio.web.exception.PortfolioStockAddException
 import zaf.stock.stockportfolio.web.exception.ResourceNotFoundException
 
 @RestController
 @RequestMapping("/portfolios")
 class PortfolioController(
-        val createPortfolio: CreatePortfolio
-        , val getSinglePortfolio: GetSinglePortfolio
-        , val getAllPortfolios: GetAllPortfolios
-        , val addPositionOnPortfolio: AddPositionOnPortfolio
+        val portfolioFacade: PortfolioFacade
 ) {
 
     val log = LoggerFactory.getLogger(PortfolioController::class.java.name)!!
@@ -28,7 +22,7 @@ class PortfolioController(
     @GetMapping("/portfolio/{portfolioName}")
     fun getPorftolio(@PathVariable portfolioName: String): Portfolio {
         log.debug("getting portfolio with name $portfolioName")
-        val portfolio = getSinglePortfolio.get(portfolioName)
+        val portfolio = portfolioFacade.get(portfolioName)
 
         portfolio.ifPresent {
             log.debug("portfolio found: $portfolio")
@@ -42,7 +36,7 @@ class PortfolioController(
     fun newPortfolio(@RequestParam portfolioName: String): Portfolio {
         log.debug("create portfolio with name $portfolioName")
 
-        val createdPortfolio = createPortfolio.create(portfolioName)
+        val createdPortfolio = portfolioFacade.create(portfolioName)
 
         val portfolio = createdPortfolio.orElseThrow({ PortfolioCreationException() })
         log.debug("portfolio created: $createdPortfolio")
@@ -54,7 +48,7 @@ class PortfolioController(
     fun listPortfolios(): List<Portfolio> {
         log.debug("getting all portfolios")
         try {
-            return getAllPortfolios.get()
+            return portfolioFacade.getAll()
         } catch (e: PortfolioOperationException) {
             throw PortfolioRetrievingException("Exception while retrieving all portfolios")
         }
@@ -69,7 +63,7 @@ class PortfolioController(
         log.debug("add position $isin (vol: $volume - price: $price")
 
         try {
-            return addPositionOnPortfolio.add(
+            return portfolioFacade.addPosition(
                     Position(isin = isin, volume = volume, buyPrice = price),
                     portfolioName
             )
