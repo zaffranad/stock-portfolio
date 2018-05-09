@@ -24,12 +24,12 @@ class PortfolioController(
         log.debug("getting portfolio with name $portfolioName")
         val portfolio = portfolioFacade.get(portfolioName)
 
-        portfolio.ifPresent {
+        if (portfolio.isPresent) {
             log.debug("portfolio found: $portfolio")
-            return@ifPresent
+            return portfolio.get()
         }
 
-        throw ResourceNotFoundException()
+        throw ResourceNotFoundException("portfolio with name $portfolioName not found")
     }
 
     @PostMapping("/portfolio")
@@ -67,7 +67,7 @@ class PortfolioController(
                     Position(isin = isin, volume = volume, buyPrice = price),
                     portfolioName
             )
-        }catch (operationExceptionOperationException: PortfolioOperationException){
+        } catch (operationExceptionOperationException: PortfolioOperationException) {
             throw PortfolioStockAddException()
         }
 

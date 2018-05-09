@@ -27,7 +27,7 @@ class PortfolioControllerTest{
     lateinit var portfolioFacade: PortfolioFacade
 
     @Test
-    fun getAll_Should_return_200_and_empty_list_when_no_portfolio_found() {
+    fun getAll_noPortfoliosFound_200AndEmptyArray() {
         this.mockMvc.perform(get("/portfolios/"))
                     .andDo(print())
                     .andExpect(status().isOk)
@@ -36,7 +36,7 @@ class PortfolioControllerTest{
     }
 
     @Test
-    fun getAll_Should_return_200_and_list_of_portfolio_when_portfolios_found() {
+    fun getAll_portfoliosFound_200AndAllPortfolios() {
 
         Mockito.`when`(portfolioFacade.getAll())
                 .thenReturn(

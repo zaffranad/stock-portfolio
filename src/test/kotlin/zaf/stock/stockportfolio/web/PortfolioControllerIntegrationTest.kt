@@ -1,6 +1,6 @@
 package zaf.stock.stockportfolio.web
 
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
@@ -9,18 +9,16 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
-import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit4.SpringRunner
 import zaf.stock.stockportfolio.portfolio.exception.PortfolioOperationException
 import zaf.stock.stockportfolio.portfolio.facade.PortfolioFacade
 import zaf.stock.stockportfolio.portfolio.model.Portfolio
+import java.util.*
 
 @RunWith(SpringRunner::class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class PortfolioControllerTestIntegration {
-
-    private final inline fun <reified T : Any> typeRef(): ParameterizedTypeReference<T> = object : ParameterizedTypeReference<T>() {}
+class PortfolioControllerIntegrationTest {
 
     @LocalServerPort
     var port: Int = 0
@@ -32,7 +30,7 @@ class PortfolioControllerTestIntegration {
     lateinit var portfolioFacade: PortfolioFacade
 
     @Test
-    fun getAllPortfolios_Should_return_empty_list_when_no_portfolios_exists() {
+    fun getAllPortfolios_noPortfoliosFound_200AndEmptyBody() {
 
         // given
         Mockito.`when`(portfolioFacade.getAll()).thenReturn(emptyList())
@@ -44,17 +42,17 @@ class PortfolioControllerTestIntegration {
         )
 
         //then
-        Assertions.assertThat(
+        assertThat(
                 results.statusCode
         ).isEqualTo(HttpStatus.OK)
 
-        Assertions.assertThat(
+        assertThat(
                 results.body
         ).isEmpty()
     }
 
     @Test
-    fun getAllPortfolios_Should_return_all_portfolios_when_portfolios_exists() {
+    fun getAllPortfolios_portfoliosFound_200AndAllPortfolios() {
 
         // given
         val name1 = "nnn"
@@ -71,11 +69,11 @@ class PortfolioControllerTestIntegration {
         )
 
         //then
-        Assertions.assertThat(
+        assertThat(
                 results.statusCode
         ).isEqualTo(HttpStatus.OK)
 
-        Assertions.assertThat(
+        assertThat(
                 results.body
         ).isNotEmpty
                 .extracting("name")
@@ -84,7 +82,7 @@ class PortfolioControllerTestIntegration {
     }
 
     @Test
-    fun getAllPortfolios_Should_return_5OO_when_exception_while_processing() {
+    fun getAllPortfolios_PortfolioOperationException_500() {
 
         // given
         Mockito.`when`(portfolioFacade.getAll()).thenThrow(PortfolioOperationException())
@@ -92,13 +90,71 @@ class PortfolioControllerTestIntegration {
         // when
         val response = testRestTemplate.getForEntity(
                 "http://localhost:$port/portfolios/",
-                Any::class.java
+                ExceptionEntity::class.java
         )
 
         //then
-        Assertions.assertThat(
+        assertThat(
                 response.statusCode
         ).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
 
+        val body: ExceptionEntity = response.body!!
+        assertThat(body).isNotNull
+        assertThat(body.message).isEqualTo("Exception while retrieving all portfolios")
+    }
+
+    @Test
+    fun getPortfolio_portfolioFound_200AndPortfolio() {
+
+        // given
+        val portfolioName = "PTFTEST"
+        Mockito.`when`(portfolioFacade.get(portfolioName))
+                .thenReturn(
+                        Optional.of(Portfolio(portfolioName, Date(), mutableListOf()))
+                )
+
+        // when
+        val results = testRestTemplate.getForEntity(
+                "http://localhost:$port/portfolios/portfolio/$portfolioName",
+                Portfolio::class.java
+        )
+
+        //then
+        assertThat(
+                results.statusCode
+        ).isEqualTo(HttpStatus.OK)
+
+        val body: Portfolio = results.body!!
+        assertThat(
+                body.name
+        ).isEqualTo(portfolioName)
+    }
+
+    @Test
+    fun getPortfolio_portfolioNotFound_404AndEmptyBody() {
+        // given
+        Mockito.`when`(portfolioFacade.get(Mockito.anyString())).thenReturn(Optional.empty())
+        val portfolioName = "PTFTEST"
+
+        // when
+        val results = testRestTemplate.getForEntity(
+                "http://localhost:$port/portfolios/portfolio/$portfolioName",
+                ExceptionEntity::class.java
+        )
+
+        //then
+        assertThat(
+                results.statusCode
+        ).isEqualTo(HttpStatus.NOT_FOUND)
+
+        val body: ExceptionEntity = results.body!!
+        assertThat(
+                body.message
+        ).isEqualTo("portfolio with name $portfolioName not found")
+    }
+
+    @Test
+    fun getPortfolio_PortfolioOperationException_500() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 }
