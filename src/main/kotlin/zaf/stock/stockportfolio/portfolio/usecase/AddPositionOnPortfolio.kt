@@ -28,7 +28,7 @@ class AddPositionOnPortfolio(
         }
 
         log.error("Trying to add position on portfolio $portfolioName which was not found")
-        throw PortfolioOperationException()
+        throw PortfolioOperationException("Trying to add position on portfolio $portfolioName which was not found")
 
     }
 

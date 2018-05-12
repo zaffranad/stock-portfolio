@@ -36,7 +36,7 @@ class PortfolioJPA(
             dataEntityAdapter.toPortfolios(portfolios)
         } catch (e: DataAccessException) {
             log.error("error while retrieving all portfolios", e)
-            throw PortfolioOperationException()
+            throw PortfolioOperationException("error while retrieving all portfolios")
         }
     }
 
